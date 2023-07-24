@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  cal-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cal-api
+    restart: always
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      psql:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - cal-api:/app/
+
+  psql:
+    image: postgres:13.3
+    container_name: cal-db
+    restart: always
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h ${DB_HOST}
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cal-api:
+    name: cal-api-vol
+  pg-data:
+    name: pg-data-vol
